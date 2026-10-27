@@ -1,0 +1,4 @@
+import {readFileSync,existsSync,readdirSync} from 'node:fs';
+const files=readdirSync('dist').filter(f=>f.endsWith('.html'));
+let checked=0;
+for(const f of files){const html=readFileSync('dist/'+f,'utf8');if(f!=='404.html'&&(html.match(/<h1>/g)||[]).length!==1)throw Error('Invalid h1: '+f);for(const match of html.matchAll(/(?:href|src)="([^"]+)"/g)){const ref=match[1];if(!ref.startsWith('/'))continue;const [pathname,anchor]=ref.split('#');let target='dist'+(pathname==='/'?'/index.html':pathname);if(!/\.[a-z]+$/i.test(target))target+='.html';if(!existsSync(target))throw Error(`${f}: missing ${target}`);if(anchor&&!readFileSync(target,'utf8').includes(`id="${anchor}"`))throw Error('Missing anchor '+ref);checked++;}}console.log(`Verified ${files.length} pages and ${checked} local links/assets.`);
